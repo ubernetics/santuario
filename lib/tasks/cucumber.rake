@@ -14,6 +14,25 @@ begin
   require 'cucumber/rake/task'
 
   namespace :cucumber do
+task :setup_js_with_xvfb do
+  ENV['DISPLAY'] = ":99"
+  %x{Xvfb :99 -ac -screen 0 1024x768x16 2>/dev/null >/dev/null &}
+  %x{firefox --display=:99 2>/dev/null >/dev/null &}
+end 
+
+task :setup_js_with_vnc4server do
+  ENV['DISPLAY'] = ":99"
+  %x{vncserver :99 2>/dev/null >/dev/null &}
+  %x{DISPLAY=:99 firefox 2>/dev/null >/dev/null &}
+end 
+
+task :kill_js do
+  %x{killall Xvnc4}
+  %x{killall Xvfb}
+  %x{killall firefox}
+end 
+
+
     Cucumber::Rake::Task.new({:ok => 'db:test:prepare'}, 'Run features that should pass') do |t|
       t.binary = vendored_cucumber_bin # If nil, the gem's binary is used.
       t.fork = true # You may get faster startup if you set this to false
@@ -36,7 +55,7 @@ begin
     task :all => [:ok, :wip]
   end
   desc 'Alias for cucumber:ok'
-  task :cucumber => 'cucumber:ok'
+  task :cucumber => ['cucumber:setup_js_with_vnc4server', 'cucumber:ok', 'cucumber:kill_js']
 
   task :default => :cucumber
 
